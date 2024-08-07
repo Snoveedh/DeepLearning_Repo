@@ -1,0 +1,2988 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "f91df279",
+   "metadata": {
+    "_cell_guid": "b1076dfc-b9ad-4769-8c92-a6c4dae69d19",
+    "_uuid": "8f2839f25d086af736a60e9eeb907d3b93b6e0e5",
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:26.724864Z",
+     "iopub.status.busy": "2024-08-07T13:43:26.723889Z",
+     "iopub.status.idle": "2024-08-07T13:43:27.464236Z",
+     "shell.execute_reply": "2024-08-07T13:43:27.463074Z"
+    },
+    "papermill": {
+     "duration": 0.753209,
+     "end_time": "2024-08-07T13:43:27.466638",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:26.713429",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "/kaggle/input/credit-card-customer-churn-prediction/Churn_Modelling.csv\n"
+     ]
+    }
+   ],
+   "source": [
+    "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+    "# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python\n",
+    "# For example, here's several helpful packages to load\n",
+    "\n",
+    "import numpy as np # linear algebra\n",
+    "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+    "\n",
+    "# Input data files are available in the read-only \"../input/\" directory\n",
+    "# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory\n",
+    "\n",
+    "import os\n",
+    "for dirname, _, filenames in os.walk('/kaggle/input'):\n",
+    "    for filename in filenames:\n",
+    "        print(os.path.join(dirname, filename))\n",
+    "\n",
+    "# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using \"Save & Run All\" \n",
+    "# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "e13b6f36",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:27.485922Z",
+     "iopub.status.busy": "2024-08-07T13:43:27.485434Z",
+     "iopub.status.idle": "2024-08-07T13:43:27.528458Z",
+     "shell.execute_reply": "2024-08-07T13:43:27.527482Z"
+    },
+    "papermill": {
+     "duration": 0.055521,
+     "end_time": "2024-08-07T13:43:27.531033",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:27.475512",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "df=pd.read_csv('/kaggle/input/credit-card-customer-churn-prediction/Churn_Modelling.csv')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "939061de",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:27.549941Z",
+     "iopub.status.busy": "2024-08-07T13:43:27.549591Z",
+     "iopub.status.idle": "2024-08-07T13:43:27.576244Z",
+     "shell.execute_reply": "2024-08-07T13:43:27.575101Z"
+    },
+    "papermill": {
+     "duration": 0.038859,
+     "end_time": "2024-08-07T13:43:27.578589",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:27.539730",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>RowNumber</th>\n",
+       "      <th>CustomerId</th>\n",
+       "      <th>Surname</th>\n",
+       "      <th>CreditScore</th>\n",
+       "      <th>Geography</th>\n",
+       "      <th>Gender</th>\n",
+       "      <th>Age</th>\n",
+       "      <th>Tenure</th>\n",
+       "      <th>Balance</th>\n",
+       "      <th>NumOfProducts</th>\n",
+       "      <th>HasCrCard</th>\n",
+       "      <th>IsActiveMember</th>\n",
+       "      <th>EstimatedSalary</th>\n",
+       "      <th>Exited</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>1</td>\n",
+       "      <td>15634602</td>\n",
+       "      <td>Hargrave</td>\n",
+       "      <td>619</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>42</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>101348.88</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>2</td>\n",
+       "      <td>15647311</td>\n",
+       "      <td>Hill</td>\n",
+       "      <td>608</td>\n",
+       "      <td>Spain</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>41</td>\n",
+       "      <td>1</td>\n",
+       "      <td>83807.86</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>112542.58</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>3</td>\n",
+       "      <td>15619304</td>\n",
+       "      <td>Onio</td>\n",
+       "      <td>502</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>42</td>\n",
+       "      <td>8</td>\n",
+       "      <td>159660.80</td>\n",
+       "      <td>3</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>113931.57</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>4</td>\n",
+       "      <td>15701354</td>\n",
+       "      <td>Boni</td>\n",
+       "      <td>699</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>39</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>93826.63</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>5</td>\n",
+       "      <td>15737888</td>\n",
+       "      <td>Mitchell</td>\n",
+       "      <td>850</td>\n",
+       "      <td>Spain</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>43</td>\n",
+       "      <td>2</td>\n",
+       "      <td>125510.82</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>79084.10</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   RowNumber  CustomerId   Surname  CreditScore Geography  Gender  Age  \\\n",
+       "0          1    15634602  Hargrave          619    France  Female   42   \n",
+       "1          2    15647311      Hill          608     Spain  Female   41   \n",
+       "2          3    15619304      Onio          502    France  Female   42   \n",
+       "3          4    15701354      Boni          699    France  Female   39   \n",
+       "4          5    15737888  Mitchell          850     Spain  Female   43   \n",
+       "\n",
+       "   Tenure    Balance  NumOfProducts  HasCrCard  IsActiveMember  \\\n",
+       "0       2       0.00              1          1               1   \n",
+       "1       1   83807.86              1          0               1   \n",
+       "2       8  159660.80              3          1               0   \n",
+       "3       1       0.00              2          0               0   \n",
+       "4       2  125510.82              1          1               1   \n",
+       "\n",
+       "   EstimatedSalary  Exited  \n",
+       "0        101348.88       1  \n",
+       "1        112542.58       0  \n",
+       "2        113931.57       1  \n",
+       "3         93826.63       0  \n",
+       "4         79084.10       0  "
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "36328d4d",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:27.597894Z",
+     "iopub.status.busy": "2024-08-07T13:43:27.597534Z",
+     "iopub.status.idle": "2024-08-07T13:43:27.623383Z",
+     "shell.execute_reply": "2024-08-07T13:43:27.622179Z"
+    },
+    "papermill": {
+     "duration": 0.038316,
+     "end_time": "2024-08-07T13:43:27.625788",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:27.587472",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 10000 entries, 0 to 9999\n",
+      "Data columns (total 14 columns):\n",
+      " #   Column           Non-Null Count  Dtype  \n",
+      "---  ------           --------------  -----  \n",
+      " 0   RowNumber        10000 non-null  int64  \n",
+      " 1   CustomerId       10000 non-null  int64  \n",
+      " 2   Surname          10000 non-null  object \n",
+      " 3   CreditScore      10000 non-null  int64  \n",
+      " 4   Geography        10000 non-null  object \n",
+      " 5   Gender           10000 non-null  object \n",
+      " 6   Age              10000 non-null  int64  \n",
+      " 7   Tenure           10000 non-null  int64  \n",
+      " 8   Balance          10000 non-null  float64\n",
+      " 9   NumOfProducts    10000 non-null  int64  \n",
+      " 10  HasCrCard        10000 non-null  int64  \n",
+      " 11  IsActiveMember   10000 non-null  int64  \n",
+      " 12  EstimatedSalary  10000 non-null  float64\n",
+      " 13  Exited           10000 non-null  int64  \n",
+      "dtypes: float64(2), int64(9), object(3)\n",
+      "memory usage: 1.1+ MB\n"
+     ]
+    }
+   ],
+   "source": [
+    "df.info()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "20c49721",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:27.645487Z",
+     "iopub.status.busy": "2024-08-07T13:43:27.644950Z",
+     "iopub.status.idle": "2024-08-07T13:43:27.688305Z",
+     "shell.execute_reply": "2024-08-07T13:43:27.687185Z"
+    },
+    "papermill": {
+     "duration": 0.055854,
+     "end_time": "2024-08-07T13:43:27.690532",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:27.634678",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>RowNumber</th>\n",
+       "      <th>CustomerId</th>\n",
+       "      <th>CreditScore</th>\n",
+       "      <th>Age</th>\n",
+       "      <th>Tenure</th>\n",
+       "      <th>Balance</th>\n",
+       "      <th>NumOfProducts</th>\n",
+       "      <th>HasCrCard</th>\n",
+       "      <th>IsActiveMember</th>\n",
+       "      <th>EstimatedSalary</th>\n",
+       "      <th>Exited</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>count</th>\n",
+       "      <td>10000.00000</td>\n",
+       "      <td>1.000000e+04</td>\n",
+       "      <td>10000.000000</td>\n",
+       "      <td>10000.000000</td>\n",
+       "      <td>10000.000000</td>\n",
+       "      <td>10000.000000</td>\n",
+       "      <td>10000.000000</td>\n",
+       "      <td>10000.00000</td>\n",
+       "      <td>10000.000000</td>\n",
+       "      <td>10000.000000</td>\n",
+       "      <td>10000.000000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>mean</th>\n",
+       "      <td>5000.50000</td>\n",
+       "      <td>1.569094e+07</td>\n",
+       "      <td>650.528800</td>\n",
+       "      <td>38.921800</td>\n",
+       "      <td>5.012800</td>\n",
+       "      <td>76485.889288</td>\n",
+       "      <td>1.530200</td>\n",
+       "      <td>0.70550</td>\n",
+       "      <td>0.515100</td>\n",
+       "      <td>100090.239881</td>\n",
+       "      <td>0.203700</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>std</th>\n",
+       "      <td>2886.89568</td>\n",
+       "      <td>7.193619e+04</td>\n",
+       "      <td>96.653299</td>\n",
+       "      <td>10.487806</td>\n",
+       "      <td>2.892174</td>\n",
+       "      <td>62397.405202</td>\n",
+       "      <td>0.581654</td>\n",
+       "      <td>0.45584</td>\n",
+       "      <td>0.499797</td>\n",
+       "      <td>57510.492818</td>\n",
+       "      <td>0.402769</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>min</th>\n",
+       "      <td>1.00000</td>\n",
+       "      <td>1.556570e+07</td>\n",
+       "      <td>350.000000</td>\n",
+       "      <td>18.000000</td>\n",
+       "      <td>0.000000</td>\n",
+       "      <td>0.000000</td>\n",
+       "      <td>1.000000</td>\n",
+       "      <td>0.00000</td>\n",
+       "      <td>0.000000</td>\n",
+       "      <td>11.580000</td>\n",
+       "      <td>0.000000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>25%</th>\n",
+       "      <td>2500.75000</td>\n",
+       "      <td>1.562853e+07</td>\n",
+       "      <td>584.000000</td>\n",
+       "      <td>32.000000</td>\n",
+       "      <td>3.000000</td>\n",
+       "      <td>0.000000</td>\n",
+       "      <td>1.000000</td>\n",
+       "      <td>0.00000</td>\n",
+       "      <td>0.000000</td>\n",
+       "      <td>51002.110000</td>\n",
+       "      <td>0.000000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50%</th>\n",
+       "      <td>5000.50000</td>\n",
+       "      <td>1.569074e+07</td>\n",
+       "      <td>652.000000</td>\n",
+       "      <td>37.000000</td>\n",
+       "      <td>5.000000</td>\n",
+       "      <td>97198.540000</td>\n",
+       "      <td>1.000000</td>\n",
+       "      <td>1.00000</td>\n",
+       "      <td>1.000000</td>\n",
+       "      <td>100193.915000</td>\n",
+       "      <td>0.000000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>75%</th>\n",
+       "      <td>7500.25000</td>\n",
+       "      <td>1.575323e+07</td>\n",
+       "      <td>718.000000</td>\n",
+       "      <td>44.000000</td>\n",
+       "      <td>7.000000</td>\n",
+       "      <td>127644.240000</td>\n",
+       "      <td>2.000000</td>\n",
+       "      <td>1.00000</td>\n",
+       "      <td>1.000000</td>\n",
+       "      <td>149388.247500</td>\n",
+       "      <td>0.000000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>max</th>\n",
+       "      <td>10000.00000</td>\n",
+       "      <td>1.581569e+07</td>\n",
+       "      <td>850.000000</td>\n",
+       "      <td>92.000000</td>\n",
+       "      <td>10.000000</td>\n",
+       "      <td>250898.090000</td>\n",
+       "      <td>4.000000</td>\n",
+       "      <td>1.00000</td>\n",
+       "      <td>1.000000</td>\n",
+       "      <td>199992.480000</td>\n",
+       "      <td>1.000000</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "         RowNumber    CustomerId   CreditScore           Age        Tenure  \\\n",
+       "count  10000.00000  1.000000e+04  10000.000000  10000.000000  10000.000000   \n",
+       "mean    5000.50000  1.569094e+07    650.528800     38.921800      5.012800   \n",
+       "std     2886.89568  7.193619e+04     96.653299     10.487806      2.892174   \n",
+       "min        1.00000  1.556570e+07    350.000000     18.000000      0.000000   \n",
+       "25%     2500.75000  1.562853e+07    584.000000     32.000000      3.000000   \n",
+       "50%     5000.50000  1.569074e+07    652.000000     37.000000      5.000000   \n",
+       "75%     7500.25000  1.575323e+07    718.000000     44.000000      7.000000   \n",
+       "max    10000.00000  1.581569e+07    850.000000     92.000000     10.000000   \n",
+       "\n",
+       "             Balance  NumOfProducts    HasCrCard  IsActiveMember  \\\n",
+       "count   10000.000000   10000.000000  10000.00000    10000.000000   \n",
+       "mean    76485.889288       1.530200      0.70550        0.515100   \n",
+       "std     62397.405202       0.581654      0.45584        0.499797   \n",
+       "min         0.000000       1.000000      0.00000        0.000000   \n",
+       "25%         0.000000       1.000000      0.00000        0.000000   \n",
+       "50%     97198.540000       1.000000      1.00000        1.000000   \n",
+       "75%    127644.240000       2.000000      1.00000        1.000000   \n",
+       "max    250898.090000       4.000000      1.00000        1.000000   \n",
+       "\n",
+       "       EstimatedSalary        Exited  \n",
+       "count     10000.000000  10000.000000  \n",
+       "mean     100090.239881      0.203700  \n",
+       "std       57510.492818      0.402769  \n",
+       "min          11.580000      0.000000  \n",
+       "25%       51002.110000      0.000000  \n",
+       "50%      100193.915000      0.000000  \n",
+       "75%      149388.247500      0.000000  \n",
+       "max      199992.480000      1.000000  "
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.describe()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "12600ee2",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:27.711828Z",
+     "iopub.status.busy": "2024-08-07T13:43:27.711452Z",
+     "iopub.status.idle": "2024-08-07T13:43:27.717682Z",
+     "shell.execute_reply": "2024-08-07T13:43:27.716658Z"
+    },
+    "papermill": {
+     "duration": 0.018979,
+     "end_time": "2024-08-07T13:43:27.719706",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:27.700727",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(10000, 14)"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "3fcea430",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:27.740835Z",
+     "iopub.status.busy": "2024-08-07T13:43:27.739993Z",
+     "iopub.status.idle": "2024-08-07T13:43:27.754656Z",
+     "shell.execute_reply": "2024-08-07T13:43:27.753616Z"
+    },
+    "papermill": {
+     "duration": 0.027625,
+     "end_time": "2024-08-07T13:43:27.756961",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:27.729336",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<bound method DataFrame.duplicated of       RowNumber  CustomerId    Surname  CreditScore Geography  Gender  Age  \\\n",
+       "0             1    15634602   Hargrave          619    France  Female   42   \n",
+       "1             2    15647311       Hill          608     Spain  Female   41   \n",
+       "2             3    15619304       Onio          502    France  Female   42   \n",
+       "3             4    15701354       Boni          699    France  Female   39   \n",
+       "4             5    15737888   Mitchell          850     Spain  Female   43   \n",
+       "...         ...         ...        ...          ...       ...     ...  ...   \n",
+       "9995       9996    15606229   Obijiaku          771    France    Male   39   \n",
+       "9996       9997    15569892  Johnstone          516    France    Male   35   \n",
+       "9997       9998    15584532        Liu          709    France  Female   36   \n",
+       "9998       9999    15682355  Sabbatini          772   Germany    Male   42   \n",
+       "9999      10000    15628319     Walker          792    France  Female   28   \n",
+       "\n",
+       "      Tenure    Balance  NumOfProducts  HasCrCard  IsActiveMember  \\\n",
+       "0          2       0.00              1          1               1   \n",
+       "1          1   83807.86              1          0               1   \n",
+       "2          8  159660.80              3          1               0   \n",
+       "3          1       0.00              2          0               0   \n",
+       "4          2  125510.82              1          1               1   \n",
+       "...      ...        ...            ...        ...             ...   \n",
+       "9995       5       0.00              2          1               0   \n",
+       "9996      10   57369.61              1          1               1   \n",
+       "9997       7       0.00              1          0               1   \n",
+       "9998       3   75075.31              2          1               0   \n",
+       "9999       4  130142.79              1          1               0   \n",
+       "\n",
+       "      EstimatedSalary  Exited  \n",
+       "0           101348.88       1  \n",
+       "1           112542.58       0  \n",
+       "2           113931.57       1  \n",
+       "3            93826.63       0  \n",
+       "4            79084.10       0  \n",
+       "...               ...     ...  \n",
+       "9995         96270.64       0  \n",
+       "9996        101699.77       0  \n",
+       "9997         42085.58       1  \n",
+       "9998         92888.52       1  \n",
+       "9999         38190.78       0  \n",
+       "\n",
+       "[10000 rows x 14 columns]>"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.duplicated"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "83966adf",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:27.777813Z",
+     "iopub.status.busy": "2024-08-07T13:43:27.777100Z",
+     "iopub.status.idle": "2024-08-07T13:43:27.791285Z",
+     "shell.execute_reply": "2024-08-07T13:43:27.790281Z"
+    },
+    "papermill": {
+     "duration": 0.027007,
+     "end_time": "2024-08-07T13:43:27.793492",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:27.766485",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.duplicated().sum()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "a4f65df4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:27.814256Z",
+     "iopub.status.busy": "2024-08-07T13:43:27.813849Z",
+     "iopub.status.idle": "2024-08-07T13:43:27.823476Z",
+     "shell.execute_reply": "2024-08-07T13:43:27.822480Z"
+    },
+    "papermill": {
+     "duration": 0.022396,
+     "end_time": "2024-08-07T13:43:27.825604",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:27.803208",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Exited\n",
+       "0    7963\n",
+       "1    2037\n",
+       "Name: count, dtype: int64"
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df['Exited'].value_counts()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "c1fe2885",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:27.846845Z",
+     "iopub.status.busy": "2024-08-07T13:43:27.846153Z",
+     "iopub.status.idle": "2024-08-07T13:43:27.854969Z",
+     "shell.execute_reply": "2024-08-07T13:43:27.853987Z"
+    },
+    "papermill": {
+     "duration": 0.021747,
+     "end_time": "2024-08-07T13:43:27.857062",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:27.835315",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Geography\n",
+       "France     5014\n",
+       "Germany    2509\n",
+       "Spain      2477\n",
+       "Name: count, dtype: int64"
+      ]
+     },
+     "execution_count": 10,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df['Geography'].value_counts()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "d1e8aa2c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:27.879019Z",
+     "iopub.status.busy": "2024-08-07T13:43:27.878316Z",
+     "iopub.status.idle": "2024-08-07T13:43:27.887544Z",
+     "shell.execute_reply": "2024-08-07T13:43:27.886516Z"
+    },
+    "papermill": {
+     "duration": 0.022385,
+     "end_time": "2024-08-07T13:43:27.889706",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:27.867321",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Gender\n",
+       "Male      5457\n",
+       "Female    4543\n",
+       "Name: count, dtype: int64"
+      ]
+     },
+     "execution_count": 11,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df['Gender'].value_counts()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "a09bff54",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:27.913364Z",
+     "iopub.status.busy": "2024-08-07T13:43:27.912545Z",
+     "iopub.status.idle": "2024-08-07T13:43:27.928188Z",
+     "shell.execute_reply": "2024-08-07T13:43:27.927146Z"
+    },
+    "papermill": {
+     "duration": 0.029615,
+     "end_time": "2024-08-07T13:43:27.930475",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:27.900860",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>RowNumber</th>\n",
+       "      <th>CustomerId</th>\n",
+       "      <th>Surname</th>\n",
+       "      <th>CreditScore</th>\n",
+       "      <th>Geography</th>\n",
+       "      <th>Gender</th>\n",
+       "      <th>Age</th>\n",
+       "      <th>Tenure</th>\n",
+       "      <th>Balance</th>\n",
+       "      <th>NumOfProducts</th>\n",
+       "      <th>HasCrCard</th>\n",
+       "      <th>IsActiveMember</th>\n",
+       "      <th>EstimatedSalary</th>\n",
+       "      <th>Exited</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>1</td>\n",
+       "      <td>15634602</td>\n",
+       "      <td>Hargrave</td>\n",
+       "      <td>619</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>42</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>101348.88</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>2</td>\n",
+       "      <td>15647311</td>\n",
+       "      <td>Hill</td>\n",
+       "      <td>608</td>\n",
+       "      <td>Spain</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>41</td>\n",
+       "      <td>1</td>\n",
+       "      <td>83807.86</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>112542.58</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>3</td>\n",
+       "      <td>15619304</td>\n",
+       "      <td>Onio</td>\n",
+       "      <td>502</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>42</td>\n",
+       "      <td>8</td>\n",
+       "      <td>159660.80</td>\n",
+       "      <td>3</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>113931.57</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>4</td>\n",
+       "      <td>15701354</td>\n",
+       "      <td>Boni</td>\n",
+       "      <td>699</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>39</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>93826.63</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>5</td>\n",
+       "      <td>15737888</td>\n",
+       "      <td>Mitchell</td>\n",
+       "      <td>850</td>\n",
+       "      <td>Spain</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>43</td>\n",
+       "      <td>2</td>\n",
+       "      <td>125510.82</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>79084.10</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   RowNumber  CustomerId   Surname  CreditScore Geography  Gender  Age  \\\n",
+       "0          1    15634602  Hargrave          619    France  Female   42   \n",
+       "1          2    15647311      Hill          608     Spain  Female   41   \n",
+       "2          3    15619304      Onio          502    France  Female   42   \n",
+       "3          4    15701354      Boni          699    France  Female   39   \n",
+       "4          5    15737888  Mitchell          850     Spain  Female   43   \n",
+       "\n",
+       "   Tenure    Balance  NumOfProducts  HasCrCard  IsActiveMember  \\\n",
+       "0       2       0.00              1          1               1   \n",
+       "1       1   83807.86              1          0               1   \n",
+       "2       8  159660.80              3          1               0   \n",
+       "3       1       0.00              2          0               0   \n",
+       "4       2  125510.82              1          1               1   \n",
+       "\n",
+       "   EstimatedSalary  Exited  \n",
+       "0        101348.88       1  \n",
+       "1        112542.58       0  \n",
+       "2        113931.57       1  \n",
+       "3         93826.63       0  \n",
+       "4         79084.10       0  "
+      ]
+     },
+     "execution_count": 12,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "530d9797",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:27.952536Z",
+     "iopub.status.busy": "2024-08-07T13:43:27.952128Z",
+     "iopub.status.idle": "2024-08-07T13:43:27.972398Z",
+     "shell.execute_reply": "2024-08-07T13:43:27.971385Z"
+    },
+    "papermill": {
+     "duration": 0.034173,
+     "end_time": "2024-08-07T13:43:27.974859",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:27.940686",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>CustomerId</th>\n",
+       "      <th>Surname</th>\n",
+       "      <th>CreditScore</th>\n",
+       "      <th>Geography</th>\n",
+       "      <th>Gender</th>\n",
+       "      <th>Age</th>\n",
+       "      <th>Tenure</th>\n",
+       "      <th>Balance</th>\n",
+       "      <th>NumOfProducts</th>\n",
+       "      <th>HasCrCard</th>\n",
+       "      <th>IsActiveMember</th>\n",
+       "      <th>EstimatedSalary</th>\n",
+       "      <th>Exited</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>15634602</td>\n",
+       "      <td>Hargrave</td>\n",
+       "      <td>619</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>42</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>101348.88</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>15647311</td>\n",
+       "      <td>Hill</td>\n",
+       "      <td>608</td>\n",
+       "      <td>Spain</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>41</td>\n",
+       "      <td>1</td>\n",
+       "      <td>83807.86</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>112542.58</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>15619304</td>\n",
+       "      <td>Onio</td>\n",
+       "      <td>502</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>42</td>\n",
+       "      <td>8</td>\n",
+       "      <td>159660.80</td>\n",
+       "      <td>3</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>113931.57</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>15701354</td>\n",
+       "      <td>Boni</td>\n",
+       "      <td>699</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>39</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>93826.63</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>15737888</td>\n",
+       "      <td>Mitchell</td>\n",
+       "      <td>850</td>\n",
+       "      <td>Spain</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>43</td>\n",
+       "      <td>2</td>\n",
+       "      <td>125510.82</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>79084.10</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9995</th>\n",
+       "      <td>15606229</td>\n",
+       "      <td>Obijiaku</td>\n",
+       "      <td>771</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Male</td>\n",
+       "      <td>39</td>\n",
+       "      <td>5</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>2</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>96270.64</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9996</th>\n",
+       "      <td>15569892</td>\n",
+       "      <td>Johnstone</td>\n",
+       "      <td>516</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Male</td>\n",
+       "      <td>35</td>\n",
+       "      <td>10</td>\n",
+       "      <td>57369.61</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>101699.77</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9997</th>\n",
+       "      <td>15584532</td>\n",
+       "      <td>Liu</td>\n",
+       "      <td>709</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>36</td>\n",
+       "      <td>7</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>42085.58</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9998</th>\n",
+       "      <td>15682355</td>\n",
+       "      <td>Sabbatini</td>\n",
+       "      <td>772</td>\n",
+       "      <td>Germany</td>\n",
+       "      <td>Male</td>\n",
+       "      <td>42</td>\n",
+       "      <td>3</td>\n",
+       "      <td>75075.31</td>\n",
+       "      <td>2</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>92888.52</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9999</th>\n",
+       "      <td>15628319</td>\n",
+       "      <td>Walker</td>\n",
+       "      <td>792</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>28</td>\n",
+       "      <td>4</td>\n",
+       "      <td>130142.79</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>38190.78</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>10000 rows × 13 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "      CustomerId    Surname  CreditScore Geography  Gender  Age  Tenure  \\\n",
+       "0       15634602   Hargrave          619    France  Female   42       2   \n",
+       "1       15647311       Hill          608     Spain  Female   41       1   \n",
+       "2       15619304       Onio          502    France  Female   42       8   \n",
+       "3       15701354       Boni          699    France  Female   39       1   \n",
+       "4       15737888   Mitchell          850     Spain  Female   43       2   \n",
+       "...          ...        ...          ...       ...     ...  ...     ...   \n",
+       "9995    15606229   Obijiaku          771    France    Male   39       5   \n",
+       "9996    15569892  Johnstone          516    France    Male   35      10   \n",
+       "9997    15584532        Liu          709    France  Female   36       7   \n",
+       "9998    15682355  Sabbatini          772   Germany    Male   42       3   \n",
+       "9999    15628319     Walker          792    France  Female   28       4   \n",
+       "\n",
+       "        Balance  NumOfProducts  HasCrCard  IsActiveMember  EstimatedSalary  \\\n",
+       "0          0.00              1          1               1        101348.88   \n",
+       "1      83807.86              1          0               1        112542.58   \n",
+       "2     159660.80              3          1               0        113931.57   \n",
+       "3          0.00              2          0               0         93826.63   \n",
+       "4     125510.82              1          1               1         79084.10   \n",
+       "...         ...            ...        ...             ...              ...   \n",
+       "9995       0.00              2          1               0         96270.64   \n",
+       "9996   57369.61              1          1               1        101699.77   \n",
+       "9997       0.00              1          0               1         42085.58   \n",
+       "9998   75075.31              2          1               0         92888.52   \n",
+       "9999  130142.79              1          1               0         38190.78   \n",
+       "\n",
+       "      Exited  \n",
+       "0          1  \n",
+       "1          0  \n",
+       "2          1  \n",
+       "3          0  \n",
+       "4          0  \n",
+       "...      ...  \n",
+       "9995       0  \n",
+       "9996       0  \n",
+       "9997       1  \n",
+       "9998       1  \n",
+       "9999       0  \n",
+       "\n",
+       "[10000 rows x 13 columns]"
+      ]
+     },
+     "execution_count": 13,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.drop('RowNumber', axis=1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "8852a811",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:27.998338Z",
+     "iopub.status.busy": "2024-08-07T13:43:27.997955Z",
+     "iopub.status.idle": "2024-08-07T13:43:28.004099Z",
+     "shell.execute_reply": "2024-08-07T13:43:28.003123Z"
+    },
+    "papermill": {
+     "duration": 0.020816,
+     "end_time": "2024-08-07T13:43:28.006262",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:27.985446",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "df.drop(columns=['RowNumber','CustomerId', 'Surname'], inplace = True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "13aa0760",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:28.028924Z",
+     "iopub.status.busy": "2024-08-07T13:43:28.028546Z",
+     "iopub.status.idle": "2024-08-07T13:43:28.042726Z",
+     "shell.execute_reply": "2024-08-07T13:43:28.041714Z"
+    },
+    "papermill": {
+     "duration": 0.028079,
+     "end_time": "2024-08-07T13:43:28.044878",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:28.016799",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>CreditScore</th>\n",
+       "      <th>Geography</th>\n",
+       "      <th>Gender</th>\n",
+       "      <th>Age</th>\n",
+       "      <th>Tenure</th>\n",
+       "      <th>Balance</th>\n",
+       "      <th>NumOfProducts</th>\n",
+       "      <th>HasCrCard</th>\n",
+       "      <th>IsActiveMember</th>\n",
+       "      <th>EstimatedSalary</th>\n",
+       "      <th>Exited</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>619</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>42</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>101348.88</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>608</td>\n",
+       "      <td>Spain</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>41</td>\n",
+       "      <td>1</td>\n",
+       "      <td>83807.86</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>112542.58</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>502</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>42</td>\n",
+       "      <td>8</td>\n",
+       "      <td>159660.80</td>\n",
+       "      <td>3</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>113931.57</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>699</td>\n",
+       "      <td>France</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>39</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>93826.63</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>850</td>\n",
+       "      <td>Spain</td>\n",
+       "      <td>Female</td>\n",
+       "      <td>43</td>\n",
+       "      <td>2</td>\n",
+       "      <td>125510.82</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>79084.10</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   CreditScore Geography  Gender  Age  Tenure    Balance  NumOfProducts  \\\n",
+       "0          619    France  Female   42       2       0.00              1   \n",
+       "1          608     Spain  Female   41       1   83807.86              1   \n",
+       "2          502    France  Female   42       8  159660.80              3   \n",
+       "3          699    France  Female   39       1       0.00              2   \n",
+       "4          850     Spain  Female   43       2  125510.82              1   \n",
+       "\n",
+       "   HasCrCard  IsActiveMember  EstimatedSalary  Exited  \n",
+       "0          1               1        101348.88       1  \n",
+       "1          0               1        112542.58       0  \n",
+       "2          1               0        113931.57       1  \n",
+       "3          0               0         93826.63       0  \n",
+       "4          1               1         79084.10       0  "
+      ]
+     },
+     "execution_count": 15,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "3575ba92",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:28.068529Z",
+     "iopub.status.busy": "2024-08-07T13:43:28.067597Z",
+     "iopub.status.idle": "2024-08-07T13:43:28.072038Z",
+     "shell.execute_reply": "2024-08-07T13:43:28.071051Z"
+    },
+    "papermill": {
+     "duration": 0.018599,
+     "end_time": "2024-08-07T13:43:28.074258",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:28.055659",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "#OneHotEncoding which transforming object columns to dummy columns.\n",
+    "# our main idea is not best modelling, we are using here Keras and getting to know how it is being used"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "d79efed4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:28.097456Z",
+     "iopub.status.busy": "2024-08-07T13:43:28.097015Z",
+     "iopub.status.idle": "2024-08-07T13:43:28.108342Z",
+     "shell.execute_reply": "2024-08-07T13:43:28.107310Z"
+    },
+    "papermill": {
+     "duration": 0.025435,
+     "end_time": "2024-08-07T13:43:28.110633",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:28.085198",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "df = pd.get_dummies(df,columns=['Geography','Gender'],drop_first=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "4995872b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:28.133988Z",
+     "iopub.status.busy": "2024-08-07T13:43:28.133325Z",
+     "iopub.status.idle": "2024-08-07T13:43:28.152397Z",
+     "shell.execute_reply": "2024-08-07T13:43:28.151396Z"
+    },
+    "papermill": {
+     "duration": 0.033093,
+     "end_time": "2024-08-07T13:43:28.154596",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:28.121503",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>CreditScore</th>\n",
+       "      <th>Age</th>\n",
+       "      <th>Tenure</th>\n",
+       "      <th>Balance</th>\n",
+       "      <th>NumOfProducts</th>\n",
+       "      <th>HasCrCard</th>\n",
+       "      <th>IsActiveMember</th>\n",
+       "      <th>EstimatedSalary</th>\n",
+       "      <th>Exited</th>\n",
+       "      <th>Geography_Germany</th>\n",
+       "      <th>Geography_Spain</th>\n",
+       "      <th>Gender_Male</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>619</td>\n",
+       "      <td>42</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>101348.88</td>\n",
+       "      <td>1</td>\n",
+       "      <td>False</td>\n",
+       "      <td>False</td>\n",
+       "      <td>False</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>608</td>\n",
+       "      <td>41</td>\n",
+       "      <td>1</td>\n",
+       "      <td>83807.86</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>112542.58</td>\n",
+       "      <td>0</td>\n",
+       "      <td>False</td>\n",
+       "      <td>True</td>\n",
+       "      <td>False</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>502</td>\n",
+       "      <td>42</td>\n",
+       "      <td>8</td>\n",
+       "      <td>159660.80</td>\n",
+       "      <td>3</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>113931.57</td>\n",
+       "      <td>1</td>\n",
+       "      <td>False</td>\n",
+       "      <td>False</td>\n",
+       "      <td>False</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>699</td>\n",
+       "      <td>39</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>93826.63</td>\n",
+       "      <td>0</td>\n",
+       "      <td>False</td>\n",
+       "      <td>False</td>\n",
+       "      <td>False</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>850</td>\n",
+       "      <td>43</td>\n",
+       "      <td>2</td>\n",
+       "      <td>125510.82</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>79084.10</td>\n",
+       "      <td>0</td>\n",
+       "      <td>False</td>\n",
+       "      <td>True</td>\n",
+       "      <td>False</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9995</th>\n",
+       "      <td>771</td>\n",
+       "      <td>39</td>\n",
+       "      <td>5</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>2</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>96270.64</td>\n",
+       "      <td>0</td>\n",
+       "      <td>False</td>\n",
+       "      <td>False</td>\n",
+       "      <td>True</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9996</th>\n",
+       "      <td>516</td>\n",
+       "      <td>35</td>\n",
+       "      <td>10</td>\n",
+       "      <td>57369.61</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>101699.77</td>\n",
+       "      <td>0</td>\n",
+       "      <td>False</td>\n",
+       "      <td>False</td>\n",
+       "      <td>True</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9997</th>\n",
+       "      <td>709</td>\n",
+       "      <td>36</td>\n",
+       "      <td>7</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>42085.58</td>\n",
+       "      <td>1</td>\n",
+       "      <td>False</td>\n",
+       "      <td>False</td>\n",
+       "      <td>False</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9998</th>\n",
+       "      <td>772</td>\n",
+       "      <td>42</td>\n",
+       "      <td>3</td>\n",
+       "      <td>75075.31</td>\n",
+       "      <td>2</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>92888.52</td>\n",
+       "      <td>1</td>\n",
+       "      <td>True</td>\n",
+       "      <td>False</td>\n",
+       "      <td>True</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9999</th>\n",
+       "      <td>792</td>\n",
+       "      <td>28</td>\n",
+       "      <td>4</td>\n",
+       "      <td>130142.79</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>38190.78</td>\n",
+       "      <td>0</td>\n",
+       "      <td>False</td>\n",
+       "      <td>False</td>\n",
+       "      <td>False</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>10000 rows × 12 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "      CreditScore  Age  Tenure    Balance  NumOfProducts  HasCrCard  \\\n",
+       "0             619   42       2       0.00              1          1   \n",
+       "1             608   41       1   83807.86              1          0   \n",
+       "2             502   42       8  159660.80              3          1   \n",
+       "3             699   39       1       0.00              2          0   \n",
+       "4             850   43       2  125510.82              1          1   \n",
+       "...           ...  ...     ...        ...            ...        ...   \n",
+       "9995          771   39       5       0.00              2          1   \n",
+       "9996          516   35      10   57369.61              1          1   \n",
+       "9997          709   36       7       0.00              1          0   \n",
+       "9998          772   42       3   75075.31              2          1   \n",
+       "9999          792   28       4  130142.79              1          1   \n",
+       "\n",
+       "      IsActiveMember  EstimatedSalary  Exited  Geography_Germany  \\\n",
+       "0                  1        101348.88       1              False   \n",
+       "1                  1        112542.58       0              False   \n",
+       "2                  0        113931.57       1              False   \n",
+       "3                  0         93826.63       0              False   \n",
+       "4                  1         79084.10       0              False   \n",
+       "...              ...              ...     ...                ...   \n",
+       "9995               0         96270.64       0              False   \n",
+       "9996               1        101699.77       0              False   \n",
+       "9997               1         42085.58       1              False   \n",
+       "9998               0         92888.52       1               True   \n",
+       "9999               0         38190.78       0              False   \n",
+       "\n",
+       "      Geography_Spain  Gender_Male  \n",
+       "0               False        False  \n",
+       "1                True        False  \n",
+       "2               False        False  \n",
+       "3               False        False  \n",
+       "4                True        False  \n",
+       "...               ...          ...  \n",
+       "9995            False         True  \n",
+       "9996            False         True  \n",
+       "9997            False        False  \n",
+       "9998            False         True  \n",
+       "9999            False        False  \n",
+       "\n",
+       "[10000 rows x 12 columns]"
+      ]
+     },
+     "execution_count": 18,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "21095bed",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:28.179048Z",
+     "iopub.status.busy": "2024-08-07T13:43:28.178106Z",
+     "iopub.status.idle": "2024-08-07T13:43:28.200195Z",
+     "shell.execute_reply": "2024-08-07T13:43:28.199027Z"
+    },
+    "papermill": {
+     "duration": 0.036978,
+     "end_time": "2024-08-07T13:43:28.202791",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:28.165813",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/tmp/ipykernel_18/762593044.py:2: FutureWarning: Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`\n",
+      "  df.replace({False: 0, True: 1}, inplace=True)\n"
+     ]
+    }
+   ],
+   "source": [
+    "# df['Geography_Germany','Geography_Spain','Gender_Male'].astype(int)\n",
+    "df.replace({False: 0, True: 1}, inplace=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "id": "4dd03b5e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:28.227118Z",
+     "iopub.status.busy": "2024-08-07T13:43:28.226403Z",
+     "iopub.status.idle": "2024-08-07T13:43:28.242811Z",
+     "shell.execute_reply": "2024-08-07T13:43:28.241678Z"
+    },
+    "papermill": {
+     "duration": 0.030901,
+     "end_time": "2024-08-07T13:43:28.244893",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:28.213992",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>CreditScore</th>\n",
+       "      <th>Age</th>\n",
+       "      <th>Tenure</th>\n",
+       "      <th>Balance</th>\n",
+       "      <th>NumOfProducts</th>\n",
+       "      <th>HasCrCard</th>\n",
+       "      <th>IsActiveMember</th>\n",
+       "      <th>EstimatedSalary</th>\n",
+       "      <th>Exited</th>\n",
+       "      <th>Geography_Germany</th>\n",
+       "      <th>Geography_Spain</th>\n",
+       "      <th>Gender_Male</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>619</td>\n",
+       "      <td>42</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>101348.88</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>608</td>\n",
+       "      <td>41</td>\n",
+       "      <td>1</td>\n",
+       "      <td>83807.86</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>112542.58</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>502</td>\n",
+       "      <td>42</td>\n",
+       "      <td>8</td>\n",
+       "      <td>159660.80</td>\n",
+       "      <td>3</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>113931.57</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>699</td>\n",
+       "      <td>39</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>93826.63</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>850</td>\n",
+       "      <td>43</td>\n",
+       "      <td>2</td>\n",
+       "      <td>125510.82</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>79084.10</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9995</th>\n",
+       "      <td>771</td>\n",
+       "      <td>39</td>\n",
+       "      <td>5</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>2</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>96270.64</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9996</th>\n",
+       "      <td>516</td>\n",
+       "      <td>35</td>\n",
+       "      <td>10</td>\n",
+       "      <td>57369.61</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>101699.77</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9997</th>\n",
+       "      <td>709</td>\n",
+       "      <td>36</td>\n",
+       "      <td>7</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>42085.58</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9998</th>\n",
+       "      <td>772</td>\n",
+       "      <td>42</td>\n",
+       "      <td>3</td>\n",
+       "      <td>75075.31</td>\n",
+       "      <td>2</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>92888.52</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9999</th>\n",
+       "      <td>792</td>\n",
+       "      <td>28</td>\n",
+       "      <td>4</td>\n",
+       "      <td>130142.79</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>38190.78</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>10000 rows × 12 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "      CreditScore  Age  Tenure    Balance  NumOfProducts  HasCrCard  \\\n",
+       "0             619   42       2       0.00              1          1   \n",
+       "1             608   41       1   83807.86              1          0   \n",
+       "2             502   42       8  159660.80              3          1   \n",
+       "3             699   39       1       0.00              2          0   \n",
+       "4             850   43       2  125510.82              1          1   \n",
+       "...           ...  ...     ...        ...            ...        ...   \n",
+       "9995          771   39       5       0.00              2          1   \n",
+       "9996          516   35      10   57369.61              1          1   \n",
+       "9997          709   36       7       0.00              1          0   \n",
+       "9998          772   42       3   75075.31              2          1   \n",
+       "9999          792   28       4  130142.79              1          1   \n",
+       "\n",
+       "      IsActiveMember  EstimatedSalary  Exited  Geography_Germany  \\\n",
+       "0                  1        101348.88       1                  0   \n",
+       "1                  1        112542.58       0                  0   \n",
+       "2                  0        113931.57       1                  0   \n",
+       "3                  0         93826.63       0                  0   \n",
+       "4                  1         79084.10       0                  0   \n",
+       "...              ...              ...     ...                ...   \n",
+       "9995               0         96270.64       0                  0   \n",
+       "9996               1        101699.77       0                  0   \n",
+       "9997               1         42085.58       1                  0   \n",
+       "9998               0         92888.52       1                  1   \n",
+       "9999               0         38190.78       0                  0   \n",
+       "\n",
+       "      Geography_Spain  Gender_Male  \n",
+       "0                   0            0  \n",
+       "1                   1            0  \n",
+       "2                   0            0  \n",
+       "3                   0            0  \n",
+       "4                   1            0  \n",
+       "...               ...          ...  \n",
+       "9995                0            1  \n",
+       "9996                0            1  \n",
+       "9997                0            0  \n",
+       "9998                0            1  \n",
+       "9999                0            0  \n",
+       "\n",
+       "[10000 rows x 12 columns]"
+      ]
+     },
+     "execution_count": 20,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "f3b43db8",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:28.270231Z",
+     "iopub.status.busy": "2024-08-07T13:43:28.269578Z",
+     "iopub.status.idle": "2024-08-07T13:43:29.404491Z",
+     "shell.execute_reply": "2024-08-07T13:43:29.403355Z"
+    },
+    "papermill": {
+     "duration": 1.150717,
+     "end_time": "2024-08-07T13:43:29.407247",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:28.256530",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "X=df.drop(columns=['Exited'])\n",
+    "y = df['Exited']\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.2, random_state=1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "id": "4cf5fb8b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:29.432250Z",
+     "iopub.status.busy": "2024-08-07T13:43:29.431854Z",
+     "iopub.status.idle": "2024-08-07T13:43:29.446556Z",
+     "shell.execute_reply": "2024-08-07T13:43:29.445485Z"
+    },
+    "papermill": {
+     "duration": 0.029759,
+     "end_time": "2024-08-07T13:43:29.448737",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:29.418978",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>CreditScore</th>\n",
+       "      <th>Age</th>\n",
+       "      <th>Tenure</th>\n",
+       "      <th>Balance</th>\n",
+       "      <th>NumOfProducts</th>\n",
+       "      <th>HasCrCard</th>\n",
+       "      <th>IsActiveMember</th>\n",
+       "      <th>EstimatedSalary</th>\n",
+       "      <th>Geography_Germany</th>\n",
+       "      <th>Geography_Spain</th>\n",
+       "      <th>Gender_Male</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>619</td>\n",
+       "      <td>42</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>101348.88</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>608</td>\n",
+       "      <td>41</td>\n",
+       "      <td>1</td>\n",
+       "      <td>83807.86</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>112542.58</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>502</td>\n",
+       "      <td>42</td>\n",
+       "      <td>8</td>\n",
+       "      <td>159660.80</td>\n",
+       "      <td>3</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>113931.57</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>699</td>\n",
+       "      <td>39</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0.00</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>93826.63</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>850</td>\n",
+       "      <td>43</td>\n",
+       "      <td>2</td>\n",
+       "      <td>125510.82</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>79084.10</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   CreditScore  Age  Tenure    Balance  NumOfProducts  HasCrCard  \\\n",
+       "0          619   42       2       0.00              1          1   \n",
+       "1          608   41       1   83807.86              1          0   \n",
+       "2          502   42       8  159660.80              3          1   \n",
+       "3          699   39       1       0.00              2          0   \n",
+       "4          850   43       2  125510.82              1          1   \n",
+       "\n",
+       "   IsActiveMember  EstimatedSalary  Geography_Germany  Geography_Spain  \\\n",
+       "0               1        101348.88                  0                0   \n",
+       "1               1        112542.58                  0                1   \n",
+       "2               0        113931.57                  0                0   \n",
+       "3               0         93826.63                  0                0   \n",
+       "4               1         79084.10                  0                1   \n",
+       "\n",
+       "   Gender_Male  \n",
+       "0            0  \n",
+       "1            0  \n",
+       "2            0  \n",
+       "3            0  \n",
+       "4            0  "
+      ]
+     },
+     "execution_count": 22,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "id": "b8ed07fa",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:29.475275Z",
+     "iopub.status.busy": "2024-08-07T13:43:29.474880Z",
+     "iopub.status.idle": "2024-08-07T13:43:29.482840Z",
+     "shell.execute_reply": "2024-08-07T13:43:29.481807Z"
+    },
+    "papermill": {
+     "duration": 0.023949,
+     "end_time": "2024-08-07T13:43:29.484931",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:29.460982",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0       1\n",
+       "1       0\n",
+       "2       1\n",
+       "3       0\n",
+       "4       0\n",
+       "       ..\n",
+       "9995    0\n",
+       "9996    0\n",
+       "9997    1\n",
+       "9998    1\n",
+       "9999    0\n",
+       "Name: Exited, Length: 10000, dtype: int64"
+      ]
+     },
+     "execution_count": 23,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "y"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "id": "a381ba2c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:29.511151Z",
+     "iopub.status.busy": "2024-08-07T13:43:29.510754Z",
+     "iopub.status.idle": "2024-08-07T13:43:29.517590Z",
+     "shell.execute_reply": "2024-08-07T13:43:29.516435Z"
+    },
+    "papermill": {
+     "duration": 0.022629,
+     "end_time": "2024-08-07T13:43:29.519908",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:29.497279",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(8000, 11)"
+      ]
+     },
+     "execution_count": 24,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_train.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "id": "845edfa4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:29.546111Z",
+     "iopub.status.busy": "2024-08-07T13:43:29.545730Z",
+     "iopub.status.idle": "2024-08-07T13:43:29.560170Z",
+     "shell.execute_reply": "2024-08-07T13:43:29.559180Z"
+    },
+    "papermill": {
+     "duration": 0.030483,
+     "end_time": "2024-08-07T13:43:29.562691",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:29.532208",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.preprocessing import StandardScaler\n",
+    "scaler = StandardScaler()\n",
+    "\n",
+    "X_train_scaled = scaler.fit_transform(X_train)\n",
+    "X_test_scaled = scaler.fit_transform(X_test)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "id": "f4f30778",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:29.588770Z",
+     "iopub.status.busy": "2024-08-07T13:43:29.588354Z",
+     "iopub.status.idle": "2024-08-07T13:43:29.595608Z",
+     "shell.execute_reply": "2024-08-07T13:43:29.594464Z"
+    },
+    "papermill": {
+     "duration": 0.022785,
+     "end_time": "2024-08-07T13:43:29.597709",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:29.574924",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([[-0.23082038, -0.94449979, -0.70174202, ...,  1.71490137,\n",
+       "        -0.57273139,  0.91509065],\n",
+       "       [-0.25150912, -0.94449979, -0.35520275, ..., -0.58312392,\n",
+       "        -0.57273139, -1.09278791],\n",
+       "       [-0.3963303 ,  0.77498705,  0.33787579, ...,  1.71490137,\n",
+       "        -0.57273139, -1.09278791],\n",
+       "       ...,\n",
+       "       [ 0.22433188,  0.58393295,  1.3774936 , ..., -0.58312392,\n",
+       "        -0.57273139, -1.09278791],\n",
+       "       [ 0.13123255,  0.01077067,  1.03095433, ..., -0.58312392,\n",
+       "        -0.57273139, -1.09278791],\n",
+       "       [ 1.1656695 ,  0.29735181,  0.33787579, ...,  1.71490137,\n",
+       "        -0.57273139,  0.91509065]])"
+      ]
+     },
+     "execution_count": 26,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    " X_train_scaled"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "id": "303361e8",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:29.624422Z",
+     "iopub.status.busy": "2024-08-07T13:43:29.623523Z",
+     "iopub.status.idle": "2024-08-07T13:43:42.002365Z",
+     "shell.execute_reply": "2024-08-07T13:43:42.001094Z"
+    },
+    "papermill": {
+     "duration": 12.395217,
+     "end_time": "2024-08-07T13:43:42.005188",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:29.609971",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "2024-08-07 13:43:31.712583: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\n",
+      "2024-08-07 13:43:31.712713: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered\n",
+      "2024-08-07 13:43:31.854926: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n"
+     ]
+    }
+   ],
+   "source": [
+    "import tensorflow\n",
+    "from tensorflow import keras\n",
+    "from tensorflow.keras import Sequential\n",
+    "from tensorflow.keras.layers import Dense"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "id": "64e71b72",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:42.032613Z",
+     "iopub.status.busy": "2024-08-07T13:43:42.031978Z",
+     "iopub.status.idle": "2024-08-07T13:43:42.036754Z",
+     "shell.execute_reply": "2024-08-07T13:43:42.035588Z"
+    },
+    "papermill": {
+     "duration": 0.020547,
+     "end_time": "2024-08-07T13:43:42.038927",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:42.018380",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "#Sequential Model Building"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "id": "9fb59627",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:42.065865Z",
+     "iopub.status.busy": "2024-08-07T13:43:42.065111Z",
+     "iopub.status.idle": "2024-08-07T13:43:42.139726Z",
+     "shell.execute_reply": "2024-08-07T13:43:42.138581Z"
+    },
+    "papermill": {
+     "duration": 0.091084,
+     "end_time": "2024-08-07T13:43:42.142396",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:42.051312",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/opt/conda/lib/python3.10/site-packages/keras/src/layers/core/dense.py:87: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.\n",
+      "  super().__init__(activity_regularizer=activity_regularizer, **kwargs)\n"
+     ]
+    }
+   ],
+   "source": [
+    "model = Sequential()\n",
+    "model.add(Dense(3, activation='sigmoid',input_dim=11))\n",
+    "model.add(Dense(1,activation='sigmoid'))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "id": "fde85b0b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:42.169018Z",
+     "iopub.status.busy": "2024-08-07T13:43:42.168619Z",
+     "iopub.status.idle": "2024-08-07T13:43:42.188494Z",
+     "shell.execute_reply": "2024-08-07T13:43:42.187215Z"
+    },
+    "papermill": {
+     "duration": 0.035664,
+     "end_time": "2024-08-07T13:43:42.190720",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:42.155056",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"font-weight: bold\">Model: \"sequential\"</span>\n",
+       "</pre>\n"
+      ],
+      "text/plain": [
+       "\u001b[1mModel: \"sequential\"\u001b[0m\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/html": [
+       "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓\n",
+       "┃<span style=\"font-weight: bold\"> Layer (type)                    </span>┃<span style=\"font-weight: bold\"> Output Shape           </span>┃<span style=\"font-weight: bold\">       Param # </span>┃\n",
+       "┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩\n",
+       "│ dense (<span style=\"color: #0087ff; text-decoration-color: #0087ff\">Dense</span>)                   │ (<span style=\"color: #00d7ff; text-decoration-color: #00d7ff\">None</span>, <span style=\"color: #00af00; text-decoration-color: #00af00\">3</span>)              │            <span style=\"color: #00af00; text-decoration-color: #00af00\">36</span> │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dense_1 (<span style=\"color: #0087ff; text-decoration-color: #0087ff\">Dense</span>)                 │ (<span style=\"color: #00d7ff; text-decoration-color: #00d7ff\">None</span>, <span style=\"color: #00af00; text-decoration-color: #00af00\">1</span>)              │             <span style=\"color: #00af00; text-decoration-color: #00af00\">4</span> │\n",
+       "└─────────────────────────────────┴────────────────────────┴───────────────┘\n",
+       "</pre>\n"
+      ],
+      "text/plain": [
+       "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓\n",
+       "┃\u001b[1m \u001b[0m\u001b[1mLayer (type)                   \u001b[0m\u001b[1m \u001b[0m┃\u001b[1m \u001b[0m\u001b[1mOutput Shape          \u001b[0m\u001b[1m \u001b[0m┃\u001b[1m \u001b[0m\u001b[1m      Param #\u001b[0m\u001b[1m \u001b[0m┃\n",
+       "┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩\n",
+       "│ dense (\u001b[38;5;33mDense\u001b[0m)                   │ (\u001b[38;5;45mNone\u001b[0m, \u001b[38;5;34m3\u001b[0m)              │            \u001b[38;5;34m36\u001b[0m │\n",
+       "├─────────────────────────────────┼────────────────────────┼───────────────┤\n",
+       "│ dense_1 (\u001b[38;5;33mDense\u001b[0m)                 │ (\u001b[38;5;45mNone\u001b[0m, \u001b[38;5;34m1\u001b[0m)              │             \u001b[38;5;34m4\u001b[0m │\n",
+       "└─────────────────────────────────┴────────────────────────┴───────────────┘\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/html": [
+       "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"font-weight: bold\"> Total params: </span><span style=\"color: #00af00; text-decoration-color: #00af00\">40</span> (160.00 B)\n",
+       "</pre>\n"
+      ],
+      "text/plain": [
+       "\u001b[1m Total params: \u001b[0m\u001b[38;5;34m40\u001b[0m (160.00 B)\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/html": [
+       "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"font-weight: bold\"> Trainable params: </span><span style=\"color: #00af00; text-decoration-color: #00af00\">40</span> (160.00 B)\n",
+       "</pre>\n"
+      ],
+      "text/plain": [
+       "\u001b[1m Trainable params: \u001b[0m\u001b[38;5;34m40\u001b[0m (160.00 B)\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/html": [
+       "<pre style=\"white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace\"><span style=\"font-weight: bold\"> Non-trainable params: </span><span style=\"color: #00af00; text-decoration-color: #00af00\">0</span> (0.00 B)\n",
+       "</pre>\n"
+      ],
+      "text/plain": [
+       "\u001b[1m Non-trainable params: \u001b[0m\u001b[38;5;34m0\u001b[0m (0.00 B)\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "model.summary()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "id": "cc68502a",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:42.279246Z",
+     "iopub.status.busy": "2024-08-07T13:43:42.278849Z",
+     "iopub.status.idle": "2024-08-07T13:43:42.294616Z",
+     "shell.execute_reply": "2024-08-07T13:43:42.293700Z"
+    },
+    "papermill": {
+     "duration": 0.093033,
+     "end_time": "2024-08-07T13:43:42.297022",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:42.203989",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "model.compile(loss='binary_crossentropy',optimizer='Adam')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 32,
+   "id": "d9dd342e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:42.325179Z",
+     "iopub.status.busy": "2024-08-07T13:43:42.324761Z",
+     "iopub.status.idle": "2024-08-07T13:43:46.112252Z",
+     "shell.execute_reply": "2024-08-07T13:43:46.111176Z"
+    },
+    "papermill": {
+     "duration": 3.804181,
+     "end_time": "2024-08-07T13:43:46.114561",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:42.310380",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 1/10\n",
+      "\u001b[1m250/250\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m1s\u001b[0m 1ms/step - loss: 1.0479\n",
+      "Epoch 2/10\n",
+      "\u001b[1m250/250\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - loss: 0.7806\n",
+      "Epoch 3/10\n",
+      "\u001b[1m250/250\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - loss: 0.6432\n",
+      "Epoch 4/10\n",
+      "\u001b[1m250/250\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - loss: 0.5727\n",
+      "Epoch 5/10\n",
+      "\u001b[1m250/250\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - loss: 0.5319\n",
+      "Epoch 6/10\n",
+      "\u001b[1m250/250\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - loss: 0.5093\n",
+      "Epoch 7/10\n",
+      "\u001b[1m250/250\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - loss: 0.4900\n",
+      "Epoch 8/10\n",
+      "\u001b[1m250/250\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - loss: 0.4741\n",
+      "Epoch 9/10\n",
+      "\u001b[1m250/250\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - loss: 0.4600\n",
+      "Epoch 10/10\n",
+      "\u001b[1m250/250\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step - loss: 0.4614\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "<keras.src.callbacks.history.History at 0x787ab4403a00>"
+      ]
+     },
+     "execution_count": 32,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "model.fit(X_train_scaled,y_train,epochs=10)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 33,
+   "id": "743defac",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:46.153374Z",
+     "iopub.status.busy": "2024-08-07T13:43:46.152981Z",
+     "iopub.status.idle": "2024-08-07T13:43:46.164796Z",
+     "shell.execute_reply": "2024-08-07T13:43:46.163577Z"
+    },
+    "papermill": {
+     "duration": 0.033946,
+     "end_time": "2024-08-07T13:43:46.167186",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:46.133240",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "[array([[-0.19008727,  0.4430903 , -0.02502753],\n",
+       "        [ 1.2612275 ,  0.9741761 , -1.713353  ],\n",
+       "        [ 0.08730382, -0.2683127 ,  0.16370262],\n",
+       "        [ 0.0874749 , -0.01461774, -0.2897203 ],\n",
+       "        [-0.35191265, -0.22227274,  0.1894515 ],\n",
+       "        [ 0.0573656 ,  0.22609396,  0.09558026],\n",
+       "        [-0.83015347, -0.44215003,  0.7033914 ],\n",
+       "        [ 0.09737378, -0.40587774, -0.11295199],\n",
+       "        [ 0.9172856 ,  0.60066825, -0.34031487],\n",
+       "        [ 0.1245405 ,  0.15213405,  0.20941377],\n",
+       "        [-0.21654479, -0.5268988 ,  0.6186867 ]], dtype=float32),\n",
+       " array([-0.7445097 , -0.42813864,  0.42436635], dtype=float32)]"
+      ]
+     },
+     "execution_count": 33,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "model.layers[0].get_weights()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "id": "d5c22af7",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:46.206729Z",
+     "iopub.status.busy": "2024-08-07T13:43:46.205784Z",
+     "iopub.status.idle": "2024-08-07T13:43:46.215529Z",
+     "shell.execute_reply": "2024-08-07T13:43:46.214541Z"
+    },
+    "papermill": {
+     "duration": 0.03169,
+     "end_time": "2024-08-07T13:43:46.217628",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:46.185938",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "[array([[ 0.58704233],\n",
+       "        [ 0.08392469],\n",
+       "        [-0.9021366 ]], dtype=float32),\n",
+       " array([-1.0867358], dtype=float32)]"
+      ]
+     },
+     "execution_count": 34,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "model.layers[1].get_weights()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "id": "f1854db9",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:46.257694Z",
+     "iopub.status.busy": "2024-08-07T13:43:46.256704Z",
+     "iopub.status.idle": "2024-08-07T13:43:46.485683Z",
+     "shell.execute_reply": "2024-08-07T13:43:46.484540Z"
+    },
+    "papermill": {
+     "duration": 0.251565,
+     "end_time": "2024-08-07T13:43:46.488230",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:46.236665",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\u001b[1m63/63\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 1ms/step  \n"
+     ]
+    }
+   ],
+   "source": [
+    "y_log = model.predict(X_test_scaled)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "id": "bb5b88bc",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:46.527755Z",
+     "iopub.status.busy": "2024-08-07T13:43:46.527352Z",
+     "iopub.status.idle": "2024-08-07T13:43:46.532581Z",
+     "shell.execute_reply": "2024-08-07T13:43:46.531549Z"
+    },
+    "papermill": {
+     "duration": 0.027699,
+     "end_time": "2024-08-07T13:43:46.534901",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:46.507202",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "y_pred = np.where(y_log>0.5,1,0)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 37,
+   "id": "2e47aec4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-08-07T13:43:46.575397Z",
+     "iopub.status.busy": "2024-08-07T13:43:46.574994Z",
+     "iopub.status.idle": "2024-08-07T13:43:46.583506Z",
+     "shell.execute_reply": "2024-08-07T13:43:46.582532Z"
+    },
+    "papermill": {
+     "duration": 0.031162,
+     "end_time": "2024-08-07T13:43:46.585647",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:46.554485",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0.7925"
+      ]
+     },
+     "execution_count": 37,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "from sklearn.metrics import accuracy_score\n",
+    "accuracy_score(y_test,y_pred)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "db810921",
+   "metadata": {
+    "papermill": {
+     "duration": 0.018824,
+     "end_time": "2024-08-07T13:43:46.623522",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:46.604698",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "0e090ed6",
+   "metadata": {
+    "papermill": {
+     "duration": 0.019972,
+     "end_time": "2024-08-07T13:43:46.663569",
+     "exception": false,
+     "start_time": "2024-08-07T13:43:46.643597",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kaggle": {
+   "accelerator": "none",
+   "dataSources": [
+    {
+     "datasetId": 869651,
+     "sourceId": 1481789,
+     "sourceType": "datasetVersion"
+    }
+   ],
+   "dockerImageVersionId": 30746,
+   "isGpuEnabled": false,
+   "isInternetEnabled": true,
+   "language": "python",
+   "sourceType": "notebook"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.13"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 24.997116,
+   "end_time": "2024-08-07T13:43:49.107229",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2024-08-07T13:43:24.110113",
+   "version": "2.5.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
